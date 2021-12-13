@@ -1,0 +1,322 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{access-pe}</name>
+
+      <config>
+        <configuration xmlns="http://xml.juniper.net/xnm/1.1/xnm">
+
+          <routing-options>
+            <dynamic-tunnels>
+
+              <dynamic-tunnel foreach="{sr-te/odn/import-color}" when="{../import-route-policy-name}">
+                <name>{../import-route-policy-name}-import-color-{id}</name>
+                <spring-te>
+                  <source-routing-path-template>
+                    <name>{../cisco-sr-te-cfp:sr-te/odn/odn-template[color=id]/name}</name>
+                    <color>{id}</color>
+                  </source-routing-path-template>
+                  <?foreach {ipv4/prefix | ipv6/prefix}?>
+                    <destination-networks>
+                      <name>{.}</name>
+                    </destination-networks>
+                  <?end?>
+                </spring-te>
+              </dynamic-tunnel>
+
+              <dynamic-tunnel foreach="{sr-te/odn/export-color}">
+                <name>{../export-route-policy-name}-export-color-{id}</name>
+                <?set ODN_TEMPLATE={/../../cisco-sr-te-cfp:sr-te/cisco-sr-te-cfp-sr-odn:odn/odn-template[color=current()/id]/head-end[name=/access-pe]/../name}?>
+                <spring-te when="{$ODN_TEMPLATE != ''}">
+                  <source-routing-path-template>
+                    <name>{$ODN_TEMPLATE}</name>
+                    <color>{id}</color>
+                  </source-routing-path-template>
+                  <?foreach {ipv4/prefix | ipv6/prefix}?>
+                    <destination-networks>
+                      <name>{.}</name>
+                    </destination-networks>
+                  <?end?>
+                </spring-te>
+              </dynamic-tunnel>
+
+            </dynamic-tunnels>
+          </routing-options>
+
+          <policy-options>
+            <community foreach="{sr-te/odn/import-color | sr-te/odn/export-color}">
+              <name>color-{id}</name>
+              <members>color:0:{id}</members>
+            </community>
+
+            <policy-statement when="{sr-te/odn/import-route-policy-name}">
+              <name>{sr-te/odn/import-route-policy-name}-import</name>
+              <from>
+                <protocol>bgp</protocol>
+              </from>
+              <then>
+                <community foreach="{import-color}">
+                  <key1>add</key1>
+                  <community-name>color-{id}</community-name>
+                </community>
+                <accept/>
+              </then>
+            </policy-statement>
+
+            <policy-statement when="{sr-te/odn/export-route-policy-name}">
+              <name>{sr-te/odn/export-route-policy-name}-export</name>
+              <from>
+                <protocol>bgp</protocol>
+              </from>
+              <then>
+                <community foreach="{export-color}">
+                  <key1>add</key1>
+                  <community-name>color-{id}</community-name>
+                </community>
+                <accept/>
+              </then>
+            </policy-statement>
+
+            <?foreach {vrf/address-family}?>
+              <?set FAMILY='inet'?>
+              <?if {address-family='ipv6'}?>
+                <?set FAMILY='inet6'?>
+              <?end?>
+
+              <?foreach {vpn-target}?>
+                <?if {rt-type='import' or rt-type='both'}?>
+                  <community>
+                    <name>{../../vrf-definition}-{../address-family}-community-import</name>
+                    <members>target:{rt-value}</members>
+                  </community>
+
+                  <policy-statement>
+                    <name>{../../vrf-definition}-{../address-family}-import</name>
+                    <from>
+                      <protocol>bgp</protocol>
+                      <family>{$FAMILY}</family>
+                      <community>{../../vrf-definition}-{../address-family}-community-import</community>
+                    </from>
+                    <then>
+                      <accept/>
+                    </then>
+                  </policy-statement>
+                <?end?>
+
+                <?if {rt-type='export' or rt-type='both'}?>
+                  <community>
+                    <name>{../../vrf-definition}-{../address-family}-community-export</name>
+                    <members>target:{rt-value}</members>
+                  </community>
+
+                  <policy-statement>
+                    <name>{../../vrf-definition}-{../address-family}-export</name>
+                    <from>
+                      <protocol>bgp</protocol>
+                      <protocol when="{../redistribute-connected}">direct</protocol>
+                      <family>{$FAMILY}</family>
+                    </from>
+                    <then>
+                      <community>
+                        <key1>add</key1>
+                        <community-name>{../../vrf-definition}-{../address-family}-community-export</community-name>
+                      </community>
+                      <metric>
+                        <metric>{../metric}</metric>
+                      </metric>
+                      <accept/>
+                    </then>
+                  </policy-statement>
+                <?end?>
+              <?end?>
+
+            <?end?>
+          </policy-options>
+
+          <?set IF_TYPE='et'?>
+          <?if {if-type='Loopback'} ?>
+            <?set IF_TYPE='lo'?>
+          <?end?>
+          <?if {if-type='Bundle-Ether'} ?>
+            <?set IF_TYPE='ae'?>
+          <?end?>
+          <?if {if-type='Ethernet'} ?>
+            <?set IF_TYPE='fe'?>
+          <?end?>
+          <?if {if-type='GigabitEthernet'} ?>
+            <?set IF_TYPE='ge'?>
+          <?end?>
+          <?if {if-type='TenGigE'} ?>
+            <?set IF_TYPE='xe'?>
+          <?end?>
+          <?if {if-type='BVI'} ?>
+            <?set IF_TYPE='irb'?>
+          <?end?>
+
+          <?set IF_UNIT='0'?>
+          <?if {vlan-id} ?>
+            <?set IF_UNIT='{vlan-id}'?>
+          <?end?>
+
+          <interfaces>
+            <interface tags="nocreate">
+              <name>{$IF_TYPE}-{if-id}</name>
+              <vlan-tagging tags="merge"></vlan-tagging>
+              <unit tags="merge">
+                <name>{$IF_UNIT}</name>
+                <family>
+                  <inet when="{pe-ip-addr}">
+                    <address>
+                      <name>{pe-ip-addr}</name>
+                    </address>
+                  </inet>
+                  <inet6 when="{pe-ipv6-addr}">
+                    <address>
+                      <name>{pe-ipv6-addr}</name>
+                    </address>
+                  </inet6>
+                </family>
+                <vlan-id>{vlan-id}</vlan-id>
+                <mtu>{mtu}</mtu>
+              </unit>
+            </interface>
+          </interfaces>
+
+          <routing-instances>
+            <instance>
+              <name>{vrf/vrf-definition}</name>
+              <instance-type>vrf</instance-type>
+              <routing-options>
+                <autonomous-system>
+                  <as-number>{../as-no}</as-number>
+                </autonomous-system>
+              </routing-options>
+              <interface>
+                <name>{$IF_TYPE}-{../if-id}.{$IF_UNIT}</name>
+              </interface>
+              <route-distinguisher>
+                <rd-type>{route-distinguisher}</rd-type>
+              </route-distinguisher>
+              <vrf-import foreach="{address-family}">{../vrf-definition}-{address-family}-import</vrf-import>
+              <vrf-export foreach="{address-family}">{../vrf-definition}-{address-family}-export</vrf-export>
+              <vrf-import>{../sr-te/odn/import-route-policy-name}-import</vrf-import>
+              <vrf-export>{../sr-te/odn/export-route-policy-name}-export</vrf-export>
+              <vrf-table-label/>
+
+              <protocols>
+                <bgp when="{../ce-pe-prot/e-bgp}">
+                  <?set-context-node {../ce-pe-prot/e-bgp?>
+
+                  <group>
+                    <name>external-peers</name>
+                    <type>external</type>
+                    <neighbor>
+                      <name>{neighbor-ipv4}</name>
+                      <peer-as>{remote-as-ipv4}</peer-as>
+                    </neighbor>
+                    <neighbor>
+                      <name>{neighbor-ipv6}</name>
+                      <peer-as>{remote-as-ipv6}</peer-as>
+                    </neighbor>
+
+                    <multihop when="{ebgp-multihop}">
+                      <ttl>{ebgp-multihop/ttl-value}</ttl>
+                    </multihop>
+
+                    <?if {update-source}?>
+                      <?set-context-node {update-source}?>
+                      <?set IF_TYPE='et'?>
+                      <?if {if-type='Loopback'} ?>
+                        <?set IF_TYPE='lo'?>
+                      <?end?>
+                      <?if {if-type='Bundle-Ether'} ?>
+                        <?set IF_TYPE='ae'?>
+                      <?end?>
+                      <?if {if-type='Ethernet'} ?>
+                        <?set IF_TYPE='fe'?>
+                      <?end?>
+                      <?if {if-type='GigabitEthernet'} ?>
+                        <?set IF_TYPE='ge'?>
+                      <?end?>
+                      <?if {if-type='TenGigE'} ?>
+                        <?set IF_TYPE='xe'?>
+                      <?end?>
+
+                      <?set IF_UNIT='0'?>
+                      <?if {sub-if-id} ?>
+                        <?set IF_UNIT='{vlan-id}'?>
+                      <?end?>
+                      <local-interface>{$IF_TYPE}-{if-id}.{$IF_UNIT}</local-interface>
+                    <?end?>
+                  </group>
+                </bgp>
+              </protocols>
+            </instance>
+          </routing-instances>
+
+          <bridge-domains when="{if-type='BVI'}">
+            <domain>
+              <name>{string(vrf/vrf-definition)}</name>
+              <vlan-id>{vlan-id}</vlan-id>
+              <routing-interface>irb.{if-id}</routing-interface>
+            </domain>
+          </bridge-domains>
+
+          <?foreach {l2-attachment-circuit}?>
+            <?set IF_TYPE='et'?>
+            <?if {if-type='Bundle-Ether'} ?>
+              <?set IF_TYPE='ae'?>
+            <?end?>
+            <?if {if-type='Ethernet'} ?>
+              <?set IF_TYPE='fe'?>
+            <?end?>
+            <?if {if-type='GigabitEthernet'} ?>
+              <?set IF_TYPE='ge'?>
+            <?end?>
+            <?if {if-type='TenGigE'} ?>
+              <?set IF_TYPE='xe'?>
+            <?end?>
+
+            <?set IF_UNIT='0'?>
+            <?if {vlan-id} ?>
+              <?set IF_UNIT='{vlan-id}'?>
+            <?end?>
+
+            <bridge-domains>
+              <domain>
+                <name>{string(/vrf/vrf-definition)}</name>
+                <interface>
+                  <name>{$IF_TYPE}-{if-id}.{$IF_UNIT}</name>
+                </interface>
+              </domain>
+            </bridge-domains>
+
+            <interfaces>
+              <interface tags="nocreate">
+                <name>{$IF_TYPE}-{if-id}</name>
+                <unit tags="merge">
+                  <name>{$IF_UNIT}</name>
+                  <vlan-id>{vlan-id}</vlan-id>
+                  <encapsulation>vlan-bridge</encapsulation>
+                  <mtu>{mtu}</mtu>
+                  <input-vlan-map when="{rewrite/ingress}">
+                    <?set-context-node {rewrite/ingress}?>
+                    <vlan-id>{dot1q}</vlan-id>
+                    <pop when="{pop='1'}"/>
+                    <pop-pop when="{pop='2'}"/>
+                    <push when="{push}"/>
+                    <swap when="{translate='1-to-1'}"/>
+                    <swap-push when="{translate='1-to-2'}"/>
+                    <pop-swap when="{translate='2-to-1'}"/>
+                    <swap-swap when="{translate='2-to-2'}"/>
+                  </input-vlan-map>
+                </unit>
+              </interface>
+            </interfaces>
+          <?end?>
+
+        </configuration>
+      </config>
+    </device>
+  </devices>
+</config>

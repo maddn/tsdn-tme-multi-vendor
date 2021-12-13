@@ -1,0 +1,32 @@
+This is an example package to dynamically add an python device class as a supported
+device into cisco-flat-L3vpn-fp package.
+
+The usage of IOSXR device (with IosXR.py) is for illustration only.
+You would need to implement those functions as indicated in the IosXR.py to properly configure
+the device when you actually implement your plugin.
+
+1. To configure cisco-flat-L3vpn-fp dynamic-device-mapping
+   load merge the below into NSO
+    <config xmlns="http://tail-f.com/ns/config/1.0">
+      <cfp-configurations xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L3vpn">
+        <dynamic-device-mapping>
+          <ned-id>ios-id:cisco-iosxr-cli-7.22</ned-id>
+          <python-impl-class-name>flat_l3vpn_multi_vendors.IosXR</python-impl-class-name>
+        </dynamic-device-mapping>
+      </cfp-configurations>
+    </config>
+
+2. Add this package into NSO run-time packages dir.
+   NOTE: This package's package-meta-data.xml has to be configured to run under the same python VM
+   as cisco-flat-L3vpn-fp package in this case:
+
+    <python-package>
+      <vm-name>cisco-flat-L3vpn-fp</vm-name>
+    </python-package>
+
+3. Restart NSO with package-reload option
+   ncs --with-package-reload
+
+4. When you try to use Cisco IOSXR Device
+   a. Without this extention, you will get an error "Router NED not supported "
+   b. With this extention, you will observe the proper python skeleton functions are called

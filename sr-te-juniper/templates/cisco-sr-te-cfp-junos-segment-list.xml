@@ -1,0 +1,26 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{$DEVICE}</name>
+      <config>
+        <configuration xmlns="http://xml.juniper.net/xnm/1.1/xnm">
+          <protocols>
+            <source-packet-routing>
+              <?foreach {path}?>
+                <segment-list foreach="{explicit/sid-list}">
+                  <name>{name}</name>
+                  <compute when="{count(../constraints/*) > 0}"/>
+                  <hop-list foreach="{sid}">
+                    <name>{index}</name>
+                    <label when="{mpls}">{mpls/label}</label>
+                    <ip-address when="{ipv4}">{ipv4/address}</ip-address>
+                  </hop-list>
+                </segment-list>
+              <?end?>
+            </source-packet-routing>
+          </protocols>
+        </configuration>
+      </config>
+    </device>
+  </devices>
+</config>

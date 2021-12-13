@@ -1,0 +1,109 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{$HEAD_END}</name>
+      <config>
+
+        <configuration xmlns="http://xml.juniper.net/xnm/1.1/xnm">
+          <protocols>
+            <source-packet-routing>
+
+              <?foreach {path[position() >= last()-1]}?>
+                <compute-profile when="{count(explicit/constraints/*) > 0}"
+                                 foreach="{explicit/sid-list}">
+                  <name>{name}-profile</name>
+                  <maximum-computed-segment-lists>1</maximum-computed-segment-lists>
+                  <compute-segment-list>{name}</compute-segment-list>
+                  <?set-context-node {..}?>
+                  <maximum-segment-list-depth>{constraints/sid-limit}</maximum-segment-list-depth>
+                  <admin-group foreach="{constraints/affinity/rule}">
+                    <include-all when="{action = 'include-all'}">{color}</include-all>
+                    <include-any when="{action = 'include-any'}">{color}</include-any>
+                    <exclude when="{action = 'exclude-any'}">{color}</exclude>
+                  </admin-group>
+                </compute-profile>
+
+                <compute-profile when="{dynamic}">
+                  <name>{../name}-{preference}-profile</name>
+                  <maximum-computed-segment-lists>1</maximum-computed-segment-lists>
+                  <?set-context-node {dynamic/constraints}?>
+                  <maximum-segment-list-depth>{sid-limit}</maximum-segment-list-depth>
+                  <metric-type>
+                    <te when="{../metric-type = 'te'}"/>
+                    <igp when="{../metric-type = 'igp'}"/>
+                  </metric-type>
+                  <admin-group foreach="{affinity/rule}">
+                    <include-all when="{action = 'include-all'}">{color}</include-all>
+                    <include-any when="{action = 'include-any'}">{color}</include-any>
+                    <exclude when="{action = 'exclude-any'}">{color}</exclude>
+                  </admin-group>
+                </compute-profile>
+              <?end?>
+
+              <source-routing-path>
+                <name>{name}</name>
+                <to>{tail-end}</to>
+                <color>{color}</color>
+                <binding-sid>{binding-sid}</binding-sid>
+
+                <?set-context-node {path[last()]}?>
+                <sr-preference>{preference}</sr-preference>
+                <lsp-external-controller when="{dynamic/pce}">pccd</lsp-external-controller>
+                <metric>{dynamic/metric-margin/absolute}</metric>
+
+                <?foreach {explicit/sid-list}?>
+                  <primary when="{count(../constraints/*) = 0}">
+                    <name>{name}</name>
+                    <weight>{weight}</weight>
+                  </primary>
+
+                  <primary when="{count(../constraints/*) > 0}">
+                    <name>{name}-computed</name>
+                    <weight>{weight}</weight>
+                    <compute>
+                      <compute-profile-name>{name}-profile</compute-profile-name>
+                    </compute>
+                  </primary>
+                <?end?>
+
+                <primary when="{dynamic}">
+                  <name>{string(../name)}-dynamic</name>
+                  <compute>
+                    <compute-profile-name when="count(dynamic/constraints/*) > 0}">{../name}-{preference}-profile</compute-profile-name>
+                  </compute>
+                </primary>
+
+                <?if {count(/path) > 1}?>
+                  <?set-context-node {/path[last()-1]}?>
+
+                  <?if {explicit/sid-list}?>
+                    <?set NAME={explicit/sid-list[0]/name}?>
+                    <secondary when="count(explicit/constraints/*) = 0}">
+                      <name>{$NAME}</name>
+                    </secondary>
+
+                    <secondary when="{count(explicit/constraints/*) > 0}">
+                      <name>{$NAME}-computed</name>
+                      <compute>
+                        <compute-profile-name>{$NAME}-profile</compute-profile-name>
+                      </compute>
+                    </secondary>
+                  <?end?>
+
+                  <secondary when="{dynamic}">
+                    <name>{string(../name)}-dynamic</name>
+                    <compute>
+                      <compute-profile-name>{../name}-{preference}-profile</compute-profile-name>
+                    </compute>
+                  </secondary>
+                <?end?>
+
+              </source-routing-path>
+            </source-packet-routing>
+          </protocols>
+        </configuration>
+
+      </config>
+    </device>
+  </devices>
+</config>

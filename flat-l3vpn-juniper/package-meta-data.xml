@@ -1,0 +1,19 @@
+<ncs-package xmlns="http://tail-f.com/ns/ncs-packages">
+  <name>flat-l3vpn-juniper</name>
+  <package-version>0.1</package-version>
+  <description>Juniper Flat L3VPN Package for T-SDN</description>
+  <ncs-min-version>5.4.1</ncs-min-version>
+
+  <supported-ned-id xmlns:juniper-junos-nc-4.6="http://tail-f.com/ns/ned-id/juniper-junos-nc-4.6">juniper-junos-nc-4.6:juniper-junos-nc-4.6</supported-ned-id>
+
+  <python-package>
+    <vm-name>cisco-flat-L3vpn-fp</vm-name>
+  </python-package>
+
+  <component>
+    <name>main</name>
+    <application>
+      <python-class-name>flat_l3vpn_juniper.main.Main</python-class-name>
+    </application>
+  </component>
+</ncs-package>

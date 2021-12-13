@@ -1,0 +1,48 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{$HEAD_END}</name>
+      <config>
+
+        <configuration xmlns="http://xml.juniper.net/xnm/1.1/xnm">
+          <protocols>
+            <source-packet-routing>
+
+              <compute-profile>
+                <name>{name}-profile</name>
+                <maximum-computed-segment-lists>1</maximum-computed-segment-lists>
+                <maximum-segment-list-depth>{maximum-sid-depth}</maximum-segment-list-depth>
+                <?set-context-node {dynamic}?>
+                <metric-type>
+                  <te when="{metric-type = 'te'}"/>
+                  <igp when="{metric-type = 'igp'}"/>
+                </metric-type>
+                <admin-group foreach="{affinity/rule}">
+                  <include-all when="{action = 'include-all'}">{color}</include-all>
+                  <include-any when="{action = 'include-any'}">{color}</include-any>
+                  <exclude when="{action = 'exclude-any'}">{color}</exclude>
+                </admin-group>
+              </compute-profile>
+
+              <source-routing-path-template>
+                <name>{name}</name>
+                <sr-preference>{preference}</sr-preference>
+                <lsp-external-controller when="{dynamic/pce}">pccd</lsp-external-controller>
+                <metric>{dynamic/metric-margin/absolute}</metric>
+                <primary>
+                  <name>{name}-dynamic</name>
+                  <compute>
+                    <compute-profile-name>{name}-profile</compute-profile-name>
+                  </compute>
+                </primary>
+              </source-routing-path-template>
+
+            </source-packet-routing>
+          </protocols>
+
+        </configuration>
+
+      </config>
+    </device>
+  </devices>
+</config>
