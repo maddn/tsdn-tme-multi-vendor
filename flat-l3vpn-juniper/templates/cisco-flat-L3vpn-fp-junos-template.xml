@@ -7,74 +7,92 @@
         <configuration xmlns="http://xml.juniper.net/xnm/1.1/xnm">
 
           <routing-options>
+            <!-- Include a colour name in the tunnel name which the PCE can
+                 detect. This is as a workaround for the PCE not reading the
+                 actual colour from the LSP -->
+            <?set COLOUR={sr-te/odn/export-color[last()]/id}?>
+            <?if {$COLOUR=''}?>
+              <?set COLOUR={sr-te/odn/import-color[last()]/id}?>
+            <?end?>
             <dynamic-tunnels>
-
-              <dynamic-tunnel foreach="{sr-te/odn/import-color}" when="{../import-route-policy-name}">
-                <name>{../import-route-policy-name}-import-color-{id}</name>
+              <dynamic-tunnel when="{$COLOUR!=''}">
+                <name>tunnel-color-{$COLOUR}</name>
                 <spring-te>
-                  <source-routing-path-template>
-                    <name>{../cisco-sr-te-cfp:sr-te/odn/odn-template[color=id]/name}</name>
+                  <source-routing-path-template foreach="{sr-te/odn/import-color | sr-te/odn/export-color}">
+                    <name>{string(/../../cisco-sr-te-cfp:sr-te/cisco-sr-te-cfp-sr-odn:odn/odn-template[color=current()/id]/head-end[name=/access-pe]/../name)}</name>
                     <color>{id}</color>
                   </source-routing-path-template>
-                  <?foreach {ipv4/prefix | ipv6/prefix}?>
-                    <destination-networks>
-                      <name>{.}</name>
-                    </destination-networks>
-                  <?end?>
+                  <destination-networks>
+                    <name>0.0.0.0/0</name>
+                  </destination-networks>
                 </spring-te>
               </dynamic-tunnel>
-
-              <dynamic-tunnel foreach="{sr-te/odn/export-color}">
-                <name>{../export-route-policy-name}-export-color-{id}</name>
-                <?set ODN_TEMPLATE={/../../cisco-sr-te-cfp:sr-te/cisco-sr-te-cfp-sr-odn:odn/odn-template[color=current()/id]/head-end[name=/access-pe]/../name}?>
-                <spring-te when="{$ODN_TEMPLATE != ''}">
-                  <source-routing-path-template>
-                    <name>{$ODN_TEMPLATE}</name>
-                    <color>{id}</color>
-                  </source-routing-path-template>
-                  <?foreach {ipv4/prefix | ipv6/prefix}?>
-                    <destination-networks>
-                      <name>{.}</name>
-                    </destination-networks>
-                  <?end?>
-                </spring-te>
-              </dynamic-tunnel>
-
             </dynamic-tunnels>
           </routing-options>
 
           <policy-options>
+            <resolution-map>
+              <name>map-ip-color</name>
+              <mode>ip-color</mode>
+            </resolution-map>
+
             <community foreach="{sr-te/odn/import-color | sr-te/odn/export-color}">
               <name>color-{id}</name>
               <members>color:0:{id}</members>
             </community>
 
-            <policy-statement when="{sr-te/odn/import-route-policy-name}">
-              <name>{sr-te/odn/import-route-policy-name}-import</name>
-              <from>
-                <protocol>bgp</protocol>
-              </from>
-              <then>
-                <community foreach="{import-color}">
-                  <key1>add</key1>
-                  <community-name>color-{id}</community-name>
-                </community>
-                <accept/>
-              </then>
+            <policy-statement when="{count(sr-te/odn/import-color) > 0}">
+              <name>{string(vrf/vrf-definition)}-import-add-color</name>
+              <term foreach="{sr-te/odn/import-color}">
+                <name>color-{id}</name>
+                <from>
+                  <protocol>bgp</protocol>
+                  <?foreach {ipv4/prefix | ipv6/prefix}?>
+                    <route-filter>
+                      <address>{.}</address>
+                      <key2>exact</key2>
+                      <key2-arg></key2-arg>
+                    </route-filter>
+                  <?end?>
+                </from>
+                <then>
+                  <community>
+                    <key1>add</key1>
+                    <community-name>color-{id}</community-name>
+                  </community>
+                </then>
+              </term>
             </policy-statement>
 
-            <policy-statement when="{sr-te/odn/export-route-policy-name}">
-              <name>{sr-te/odn/export-route-policy-name}-export</name>
-              <from>
-                <protocol>bgp</protocol>
-              </from>
-              <then>
-                <community foreach="{export-color}">
-                  <key1>add</key1>
-                  <community-name>color-{id}</community-name>
-                </community>
-                <accept/>
-              </then>
+            <policy-statement when="{count(sr-te/odn/export-color) > 0}">
+              <name>{string(vrf/vrf-definition)}-export-add-color</name>
+              <term foreach="{sr-te/odn/export-color}">
+                <name>color-{id}</name>
+                <from>
+                  <protocol>direct</protocol>
+                  <?foreach {ipv4/prefix | ipv6/prefix}?>
+                    <route-filter>
+                      <address>{.}</address>
+                      <key2>exact</key2>
+                      <key2-arg></key2-arg>
+                    </route-filter>
+                  <?end?>
+                </from>
+                <then>
+                  <community>
+                    <key1>add</key1>
+                    <community-name>color-{id}</community-name>
+                  </community>
+                </then>
+              </term>
+            </policy-statement>
+
+            <policy-statement>
+              <name>{vrf/vrf-definition}-import</name>
+            </policy-statement>
+
+            <policy-statement>
+              <name>{vrf/vrf-definition}-export</name>
             </policy-statement>
 
             <?foreach {vrf/address-family}?>
@@ -82,6 +100,39 @@
               <?if {address-family='ipv6'}?>
                 <?set FAMILY='inet6'?>
               <?end?>
+
+              <policy-statement>
+                <name>{string(../vrf-definition)}-import</name>
+                <term>
+                  <name>{address-family}</name>
+                  <from>
+                    <protocol>bgp</protocol>
+                    <family>{$FAMILY}</family>
+                  </from>
+                  <then>
+                    <resolution-map>map-ip-color</resolution-map>
+                    <accept/>
+                  </then>
+                </term>
+              </policy-statement>
+
+              <policy-statement>
+                <name>{string(../vrf-definition)}-export</name>
+                <term>
+                  <name>{address-family}</name>
+                  <from>
+                    <protocol>bgp</protocol>
+                    <protocol when="{redistribute-connected}">direct</protocol>
+                    <family>{$FAMILY}</family>
+                  </from>
+                  <then>
+                    <metric>
+                      <metric>{metric}</metric>
+                    </metric>
+                    <accept/>
+                  </then>
+                </term>
+              </policy-statement>
 
               <?foreach {vpn-target}?>
                 <?if {rt-type='import' or rt-type='both'}?>
@@ -91,15 +142,13 @@
                   </community>
 
                   <policy-statement>
-                    <name>{../../vrf-definition}-{../address-family}-import</name>
-                    <from>
-                      <protocol>bgp</protocol>
-                      <family>{$FAMILY}</family>
-                      <community>{../../vrf-definition}-{../address-family}-community-import</community>
-                    </from>
-                    <then>
-                      <accept/>
-                    </then>
+                    <name>{string(../../vrf-definition)}-import</name>
+                    <term>
+                      <name>{../address-family}</name>
+                      <from>
+                        <community>{../vrf-definition}-{address-family}-community-import</community>
+                      </from>
+                    </term>
                   </policy-statement>
                 <?end?>
 
@@ -110,22 +159,16 @@
                   </community>
 
                   <policy-statement>
-                    <name>{../../vrf-definition}-{../address-family}-export</name>
-                    <from>
-                      <protocol>bgp</protocol>
-                      <protocol when="{../redistribute-connected}">direct</protocol>
-                      <family>{$FAMILY}</family>
-                    </from>
-                    <then>
-                      <community>
-                        <key1>add</key1>
-                        <community-name>{../../vrf-definition}-{../address-family}-community-export</community-name>
-                      </community>
-                      <metric>
-                        <metric>{../metric}</metric>
-                      </metric>
-                      <accept/>
-                    </then>
+                    <name>{string(../../vrf-definition)}-export</name>
+                    <term>
+                      <name>{../address-family}</name>
+                      <then>
+                        <community>
+                          <key1>add</key1>
+                          <community-name>{../vrf-definition}-{address-family}-community-export</community-name>
+                        </community>
+                      </then>
+                    </term>
                   </policy-statement>
                 <?end?>
               <?end?>
@@ -197,10 +240,11 @@
               <route-distinguisher>
                 <rd-type>{route-distinguisher}</rd-type>
               </route-distinguisher>
-              <vrf-import foreach="{address-family}">{../vrf-definition}-{address-family}-import</vrf-import>
-              <vrf-export foreach="{address-family}">{../vrf-definition}-{address-family}-export</vrf-export>
-              <vrf-import>{../sr-te/odn/import-route-policy-name}-import</vrf-import>
-              <vrf-export>{../sr-te/odn/export-route-policy-name}-export</vrf-export>
+
+              <vrf-import when="{count(../sr-te/odn/import-color)>0}">{vrf-definition}-import-add-color</vrf-import>
+              <vrf-export when="{count(../sr-te/odn/export-color)>0}">{vrf-definition}-export-add-color</vrf-export>
+              <vrf-import>{vrf-definition}-import</vrf-import>
+              <vrf-export>{vrf-definition}-export</vrf-export>
               <vrf-table-label/>
 
               <protocols>
