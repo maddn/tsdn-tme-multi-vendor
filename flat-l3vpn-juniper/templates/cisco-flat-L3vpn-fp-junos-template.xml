@@ -7,16 +7,9 @@
         <configuration xmlns="http://xml.juniper.net/xnm/1.1/xnm">
 
           <routing-options>
-            <!-- Include a colour name in the tunnel name which the PCE can
-                 detect. This is as a workaround for the PCE not reading the
-                 actual colour from the LSP -->
-            <?set COLOUR={sr-te/odn/export-color[last()]/id}?>
-            <?if {$COLOUR=''}?>
-              <?set COLOUR={sr-te/odn/import-color[last()]/id}?>
-            <?end?>
             <dynamic-tunnels>
-              <dynamic-tunnel when="{$COLOUR!=''}">
-                <name>tunnel-color-{$COLOUR}</name>
+              <dynamic-tunnel when="{count(sr-te/odn/import-color) > 0 or count(sr-te/odn/export-color) > 0}">
+                <name>dynamic-tunnel-odn</name>
                 <spring-te>
                   <source-routing-path-template foreach="{sr-te/odn/import-color | sr-te/odn/export-color}">
                     <name>{string(/../../cisco-sr-te-cfp:sr-te/cisco-sr-te-cfp-sr-odn:odn/odn-template[color=current()/id]/head-end[name=/access-pe]/../name)}</name>
