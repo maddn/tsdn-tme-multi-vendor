@@ -5,7 +5,7 @@ These packages add Junos support to T-SDN for the following services:
 - SR-TE
 - L3 VPN
 
-## Pre-requisisites
+## Pre-requisites
 
 - T-SDN Core Function Pack
 - Juniper Junos NED
@@ -51,4 +51,4 @@ Both static and ODN policies are supported.
 
 ### L3 VPN
 Choose a Junos device as the access-pe when adding a VPN endpoint. Either the
-ietf-l3vpn-ntw or cisco-flat-L3vpn model can be used.
+`ietf-l3vpn-ntw` or `cisco-flat-L3vpn` model can be used.
