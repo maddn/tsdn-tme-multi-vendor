@@ -42,3 +42,13 @@ Load merge the `dynamic-device-mapping.xml` file from each package directory:
     376 bytes parsed in 0.01 sec (31.85 KiB/sec)
     admin@ncs(config)# commit
     Commit complete.
+
+## How to use
+
+### SR-TE
+Choose a Junos device as the head-end when configuring an SR-TE policy in T-SDN.
+Both static and ODN policies are supported.
+
+### L3 VPN
+Choose a Junos device as the access-pe when adding a VPN endpoint. Either the
+ietf-l3vpn-ntw or cisco-flat-L3vpn model can be used.
