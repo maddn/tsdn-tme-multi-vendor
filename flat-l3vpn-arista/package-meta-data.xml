@@ -1,0 +1,19 @@
+<ncs-package xmlns="http://tail-f.com/ns/ncs-packages">
+  <name>flat-l3vpn-arista</name>
+  <package-version>0.1</package-version>
+  <description>Arista Flat L3VPN Package for T-SDN</description>
+  <ncs-min-version>5.4.1</ncs-min-version>
+
+  <supported-ned-id xmlns:arista-dcs-cli-5.24="http://tail-f.com/ns/ned-id/arista-dcs-cli-5.24">arista-dcs-cli-5.24:arista-dcs-cli-5.24</supported-ned-id>
+
+  <python-package>
+    <vm-name>cisco-flat-L3vpn-fp</vm-name>
+  </python-package>
+
+  <component>
+    <name>main</name>
+    <application>
+      <python-class-name>flat_l3vpn_arista.main.Main</python-class-name>
+    </application>
+  </component>
+</ncs-package>
