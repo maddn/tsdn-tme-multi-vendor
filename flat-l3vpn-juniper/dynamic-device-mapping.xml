@@ -1,7 +1,11 @@
 <config xmlns="http://tail-f.com/ns/config/1.0">
   <cfp-configurations xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L3vpn">
     <dynamic-device-mapping>
-      <ned-id>juniper-junos-nc-4.6:juniper-junos-nc-4.6</ned-id>
+      <ned-id>juniper-junos-nc-4.11:juniper-junos-nc-4.11</ned-id>
+      <python-impl-class-name>flat_l3vpn_juniper.Junos</python-impl-class-name>
+    </dynamic-device-mapping>
+    <dynamic-device-mapping>
+      <ned-id>juniper-junos-nc-4.12:juniper-junos-nc-4.12</ned-id>
       <python-impl-class-name>flat_l3vpn_juniper.Junos</python-impl-class-name>
     </dynamic-device-mapping>
   </cfp-configurations>

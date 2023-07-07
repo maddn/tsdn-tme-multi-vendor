@@ -1,0 +1,130 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{access-pe}</name>
+
+      <config>
+        <vrf xmlns="http://tail-f.com/ned/arista-dcs">
+          <instance>
+            <name>{vrf/vrf-definition}</name>
+            <rd>{route-distinguisher}</rd>
+          </instance>
+        </vrf>
+
+        <ip xmlns="http://tail-f.com/ned/arista-dcs">
+          <routing>
+            <vrf>
+              <vrf-id>{vrf/vrf-definition}</vrf-id>
+              <prefix>enable</prefix>
+            </vrf>
+          </routing>
+        </ip>
+
+        <?set IF_NAME='{if-id}'?>
+        <?if {vlan-id}?>
+          <?set IF_NAME='{if-id}.{vlan-id}'?>
+        <?end?>
+        <interface xmlns="http://tail-f.com/ned/arista-dcs">
+          <Ethernet when="{if-type='Ethernet' or
+                           if-type='GigabitEthernet' or
+                           if-type='TenGigE'}">
+            <name>{$IF_NAME}</name>
+            <encapsulation>
+              <dot1q>
+                <vlan>{vlan-id}</vlan>
+              </dot1q>
+            </encapsulation>
+            <vrf>
+              <name>{vrf/vrf-definition}</name>
+            </vrf>
+            <ip>
+              <address>
+                <address-primary>{pe-ip-addr}</address-primary>
+              </address>
+            </ip>
+            <ipv6>
+              <address>
+                <prefix>{pe-ipv6-addr}</prefix>
+              </address>
+            </ipv6>
+          </Ethernet>
+        </interface>
+
+        <router xmlns="http://tail-f.com/ned/arista-dcs">
+          <bgp>
+            <id>{as-no}</id>
+            <vrf>
+              <name>{vrf/vrf-definition}</name>
+              <rd>{route-distinguisher}</rd>
+
+              <neighbor>
+                <id>{../ce-pe-prot/e-bgp/neighbor-ipv4}</id>
+                <remote-as>{remote-as-ipv4}</remote-as>
+              </neighbor>
+              <neighbor>
+                <id>{../ce-pe-prot/e-bgp/neighbor-ipv6}</id>
+                <remote-as>{remote-as-ipv6}</remote-as>
+              </neighbor>
+
+              <?foreach {address-family}?>
+                <address-family>
+                  <ipv4 when="{address-family='ipv4'}">
+                    <neighbor>
+                      <id>{../../ce-pe-prot/e-bgp/neighbor-ipv4}</id>
+                      <activate/>
+                    </neighbor>
+                  </ipv4>
+<!--
+                  <ipv6 when="{address-family='ipv6'}">
+                    <neighbor>
+                      <id>{../../ce-pe-prot/e-bgp/neighbor-ipv6}</id>
+                      <activate/>
+                    </neighbor>
+                  </ipv6>
+-->
+                </address-family>
+
+                <route-target foreach="{vpn-target}">
+                  <export when="{rt-type='export' or rt-type='both'}">
+                    <vpn-ipv4 when="{../address-family='ipv4'}">
+                      <port>
+                        <asn-ip>{rt-value}</asn-ip>
+                      </port>
+                    </vpn-ipv4>
+<!--
+                    <vpn-ipv6 when="{../address-family='ipv6'}">
+                      <port>
+                        <asn-ip>{rt-value}</asn-ip>
+                      </port>
+                    </vpn-ipv6>
+-->
+                  </export>
+                  <import when="{rt-type='import' or rt-type='both'}">
+                    <vpn-ipv4 when="{../address-family='ipv4'}">
+                      <port>
+                        <asn-ip>{rt-value}</asn-ip>
+                      </port>
+                    </vpn-ipv4>
+<!--
+                    <vpn-ipv6 when="{../address-family='ipv6'}">
+                      <port>
+                        <asn-ip>{rt-value}</asn-ip>
+                      </port>
+                    </vpn-ipv6>
+-->
+                  </import>
+                </route-target>
+
+                <redistribute when="{redistribute-connected}">
+                  <connected/>
+                </redistribute>
+              <?end?>
+
+            </vrf>
+          </bgp>
+        </router>
+
+      </config>
+    </device>
+  </devices>
+</config>
