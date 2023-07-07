@@ -8,5 +8,9 @@
       <ned-id>juniper-junos-nc-4.12:juniper-junos-nc-4.12</ned-id>
       <python-impl-class-name>sr_te_juniper.Junos</python-impl-class-name>
     </dynamic-device-mapping>
+    <dynamic-device-mapping>
+      <ned-id>juniper-junos-nc-4.11:juniper-junos-nc-4.11</ned-id>
+      <python-impl-class-name>sr_te_juniper.Junos</python-impl-class-name>
+    </dynamic-device-mapping>
   </cfp-configurations>
 </config>
