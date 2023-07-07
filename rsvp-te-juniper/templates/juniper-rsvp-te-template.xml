@@ -3,20 +3,34 @@
     <device>
       <name>{head-end}</name>
       <config>
-        <configuration xmlns="http://xml.juniper.net/xnm/1.1/xnm">
+        <configuration  tags="merge" xmlns="http://xml.juniper.net/xnm/1.1/xnm">
           <protocols>
             <mpls>
               <label-switched-path>
                 <name>{id}</name>
                 <to>{destination}</to>
+                <from>{source}</from> 
+                <bandwidth>
+                  <per-traffic-class-bandwidth>{signalled-bandwidth/bandwidth}</per-traffic-class-bandwidth>
+                </bandwidth>
                 <setup-priority>{setup-priority}</setup-priority>
                 <reservation-priority>{hold-priority}</reservation-priority>
+                <description>{description}</description>
                 <?foreach {path-option}?>
                   <primary>
                     <name>{explicit/name}</name>
                   </primary>
                 <?end?>
-                <lsp-external-controller>pccd</lsp-external-controller>
+                <lsp-external-controller when="{pce/delegation}">pccd</lsp-external-controller>
+
+                <metric-type when="{path-selection/metric}">
+                  <delay when="{path-selection/metric/metric-type='delay'}">
+                    <minimum/>
+                  </delay>
+                  <igp when="{path-selection/metric/metric-type='igp'}" />
+                  <igp when="{path-selection/metric/metric-type='te'}" />
+                </metric-type>
+
               </label-switched-path>
 
               <?foreach {path-option}?>
@@ -26,6 +40,7 @@
                     <name>{id}</name>
                     <path-list foreach="{index}">
                       <name>{ipv4/unicast}</name>
+                      <loose when="{../hop-type='loose'}"/>
                       <strict when="{../hop-type='strict'}"/>
                     </path-list>
                   </path>

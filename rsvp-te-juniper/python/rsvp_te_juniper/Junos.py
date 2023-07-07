@@ -1,8 +1,5 @@
 import ncs
 
-# ------------------------
-# PLUG-In CLASS has to implement all funtions mentioned below
-# ------------------------
 
 
 class Junos:
@@ -12,7 +9,7 @@ class Junos:
 
         """
         self.log.info(f"Find Loopback interface on {service.head_end}")
-        return 0
+        return "Loopback0"
 
     def conf_rsvp_te_tunnel_p2p(self, service, loopback):
         """
@@ -31,7 +28,8 @@ class Junos:
             ("success", None)
             ("failed", "some failure message")
         """
-        self.log.info(f"Executing self-test on Junos device {rsvp_te_service.head_end}")
+        self.log.info(f"self-test on Junos device {rsvp_te_service.head_end} not implemented")
+        return ("success", None)
 
     def __init__(self, log, root, service):
         self.log = log
