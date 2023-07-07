@@ -31,6 +31,11 @@
                   <metric-type>
                     <te when="{../metric-type = 'te'}"/>
                     <igp when="{../metric-type = 'igp'}"/>
+                    <?if-ned-id juniper-junos-nc-4.11:juniper-junos-nc-4.11?>
+		                <delay when="{metric-type = 'latency'}">
+                      <minimum/>
+	                  </delay>
+	                  <?end?>
                   </metric-type>
                   <admin-group foreach="{affinity/rule}">
                     <include-all when="{action = 'include-all'}">{color}</include-all>
