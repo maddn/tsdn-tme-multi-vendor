@@ -1,0 +1,14 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <l2vpn-ntw xmlns="urn:ietf:params:xml:ns:yang:ietf-l2vpn-ntw">
+    <cfp-configurations xmlns="http://cisco.com/ns/nso/fp/examples/cisco-l2vpn-ntw">
+      <dynamic-device-mapping>
+        <ned-id>juniper-junos-nc-4.11:juniper-junos-nc-4.11</ned-id>
+        <python-impl-class-name>flat_l2vpn_juniper.Junos</python-impl-class-name>
+      </dynamic-device-mapping>
+      <dynamic-device-mapping>
+        <ned-id>juniper-junos-nc-4.12:juniper-junos-nc-4.12</ned-id>
+        <python-impl-class-name>flat_l2vpn_juniper.Junos</python-impl-class-name>
+      </dynamic-device-mapping>
+    </cfp-configurations>
+  </l2vpn-ntw>
+</config>

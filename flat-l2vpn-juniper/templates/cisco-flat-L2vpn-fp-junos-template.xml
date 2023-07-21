@@ -1,0 +1,89 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{pe}</name>
+
+      <?set IF_TYPE='et'?>
+      <?if {if-type='Loopback'} ?>
+        <?set IF_TYPE='lo'?>
+      <?end?>
+      <?if {if-type='Bundle-Ether'} ?>
+        <?set IF_TYPE='ae'?>
+      <?end?>
+      <?if {if-type='Ethernet'} ?>
+        <?set IF_TYPE='fe'?>
+      <?end?>
+      <?if {if-type='GigabitEthernet'} ?>
+        <?set IF_TYPE='ge'?>
+      <?end?>
+      <?if {if-type='TenGigE'} ?>
+        <?set IF_TYPE='xe'?>
+      <?end?>
+      <?if {if-type='BVI'} ?>
+        <?set IF_TYPE='irb'?>
+      <?end?>
+
+      <?set IF_UNIT='0'?>
+      <?if {vlan-id} ?>
+        <?set IF_UNIT='{vlan-id}'?>
+      <?end?>
+      <?if {sub-if-id} ?>
+        <?set IF_UNIT='{sub-if-id}'?>
+      <?end?>
+
+      <?set IF_NAME={$IF_TYPE}-{if-id}.{$IF_UNIT}?>
+      <config>
+        <configuration xmlns="http://xml.juniper.net/xnm/1.1/xnm">
+          <interfaces>
+            <interface>
+              <name>{$IF_TYPE}-{if-id}</name>
+              <?if {$IF_UNIT = '0'}?>
+                <encapsulation>ethernet-ccc</encapsulation>
+              <?else?>
+                <flexible-vlan-tagging/>
+                <encapsulation>flexible-ethernet-services</encapsulation>
+              <?end?>
+              <unit>
+                <name>{$IF_UNIT}</name>
+                <encapsulation when="{$IF_UNIT != '0'}">vlan-ccc</encapsulation>
+                <vlan-id>{vlan-id}</vlan-id>
+              </unit>
+            </interface>
+          </interfaces>
+          <routing-instances>
+            <instance>
+              <name>{string(../evi-id)}</name>
+              <instance-type>evpn-vpws</instance-type>
+              <protocols>
+                <evpn>
+                  <interface>
+                    <name>{$IF_NAME}</name>
+                    <vpws-service-id>
+                      <?if {$LOCAL_NODE='true'}?>
+                        <local>{evi-source}</local>
+                        <remote>{evi-target}</remote>
+                      <?else?>
+                        <local>{../local-site/evi-target}</local>
+                        <remote>{../local-site/evi-source}</remote>
+                      <?end?>
+                    </vpws-service-id>
+                  </interface>
+                  <control-word when="{control-word='yes'}"/>
+                </evpn>
+              </protocols>
+              <interface>
+                <name>{$IF_NAME}</name>
+              </interface>
+              <route-distinguisher>
+                <rd-type>{deref(pe)/../config/junos:configuration/routing-options/router-id}:{../evi-id}</rd-type>
+              </route-distinguisher>
+              <vrf-target>
+                <community>target:{deref(pe)/../config/junos:configuration/routing-options/autonomous-system/as-number}:{../evi-id}</community>
+              </vrf-target>
+            </instance>
+          </routing-instances>
+        </configuration>
+      </config>
+    </device>
+  </devices>
+</config>

@@ -1,0 +1,22 @@
+<ncs-package xmlns="http://tail-f.com/ns/ncs-packages">
+  <name>flat-l2vpn-juniper</name>
+  <package-version>5.0.0</package-version>
+  <description>Juniper Flat L2VPN Package for T-SDN</description>
+  <ncs-min-version>6.0</ncs-min-version>
+
+  <supported-ned-id xmlns:juniper-junos-nc-4.11="http://tail-f.com/ns/ned-id/juniper-junos-nc-4.11">juniper-junos-nc-4.11:juniper-junos-nc-4.11</supported-ned-id>
+  <supported-ned-id xmlns:juniper-junos-nc-4.12="http://tail-f.com/ns/ned-id/juniper-junos-nc-4.12">juniper-junos-nc-4.12:juniper-junos-nc-4.12</supported-ned-id>
+
+  <python-package>
+    <vm-name>cisco-flat-L2vpn-fp-internal</vm-name>
+    <callpoint-model>threading</callpoint-model>
+  </python-package>
+
+  <component>
+    <name>main</name>
+    <application>
+      <python-class-name>flat_l2vpn_juniper.main.Main</python-class-name>
+    </application>
+  </component>
+
+</ncs-package>
