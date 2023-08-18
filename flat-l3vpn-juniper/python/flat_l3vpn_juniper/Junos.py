@@ -11,6 +11,9 @@ class Junos():
         self.log.info('Configuring Flat L3VPN/SR on Junos device {}'.format(endpoint.access_pe))
         Junos.template_flat_l3vpn(endpoint)
 
+    def get_bgp_as_from_device(self, root, device):
+        return (root.devices.device[device].config.junos__configuration
+                .routing_options.autonomous_system.as_number)
 
     def check_if_interface_exists(self, root, endpoint,
                                 service_interface_name, service_interface_id):

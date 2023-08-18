@@ -8,12 +8,12 @@
 
           <routing-options>
             <dynamic-tunnels>
-              <dynamic-tunnel when="{count(sr-te/odn/import-color) > 0 or count(sr-te/odn/export-color) > 0}">
+              <dynamic-tunnel when="{count(sr-te/odn/route-policy/statements/statement[actions/bgp-actions/set-ext-community/tag-value != '']) > 0}">
                 <name>dynamic-tunnel-odn</name>
                 <spring-te>
-                  <source-routing-path-template foreach="{sr-te/odn/import-color | sr-te/odn/export-color}">
-                    <name>{string(/../../cisco-sr-te-cfp:sr-te/cisco-sr-te-cfp-sr-odn:odn/odn-template[color=current()/id]/head-end[name=/access-pe]/../name)}</name>
-                    <color>{id}</color>
+                  <source-routing-path-template foreach="{sr-te/odn/route-policy/statements/statement/actions/bgp-actions/set-ext-community}">
+                    <name>{string(/../../cisco-sr-te-cfp:sr-te/cisco-sr-te-cfp-sr-odn:odn/odn-template[color=current()/tag-value]/head-end[name=/access-pe]/../name)}</name>
+                    <color>{tag-value}</color>
                   </source-routing-path-template>
                   <destination-networks>
                     <name>0.0.0.0/0</name>
@@ -29,41 +29,18 @@
               <mode>ip-color</mode>
             </resolution-map>
 
-            <community foreach="{sr-te/odn/import-color | sr-te/odn/export-color}">
-              <name>color-{id}</name>
-              <members>color:0:{id}</members>
+            <community foreach="{sr-te/odn/route-policy/statements/statement/actions/bgp-actions/set-ext-community}">
+              <name>color-{tag-value}</name>
+              <members>color:0:{tag-value}</members>
             </community>
 
-            <policy-statement when="{count(sr-te/odn/import-color) > 0}">
-              <name>{string(vrf/vrf-definition)}-import-add-color</name>
-              <term foreach="{sr-te/odn/import-color}">
-                <name>color-{id}</name>
-                <from>
-                  <protocol>bgp</protocol>
-                  <?foreach {ipv4/prefix | ipv6/prefix}?>
-                    <route-filter>
-                      <address>{.}</address>
-                      <key2>exact</key2>
-                      <key2-arg></key2-arg>
-                    </route-filter>
-                  <?end?>
-                </from>
-                <then>
-                  <community>
-                    <key1>add</key1>
-                    <community-name>color-{id}</community-name>
-                  </community>
-                </then>
-              </term>
-            </policy-statement>
-
-            <policy-statement when="{count(sr-te/odn/export-color) > 0}">
-              <name>{string(vrf/vrf-definition)}-export-add-color</name>
-              <term foreach="{sr-te/odn/export-color}">
-                <name>color-{id}</name>
+            <policy-statement foreach="{sr-te/odn/route-policy/statements/statement[actions/bgp-actions/set-ext-community/tag-value != '']}">
+              <name>{string(../../route-policy-name)}-{string(../../direction)}-add-color</name>
+              <term>
+                <name>color-{actions/bgp-actions/set-ext-community/tag-value}</name>
                 <from>
                   <protocol>direct</protocol>
-                  <?foreach {ipv4/prefix | ipv6/prefix}?>
+                  <?foreach {../../../../conditions/match-dest-prefix-set/prefix-set}?>
                     <route-filter>
                       <address>{.}</address>
                       <key2>exact</key2>
@@ -74,7 +51,7 @@
                 <then>
                   <community>
                     <key1>add</key1>
-                    <community-name>color-{id}</community-name>
+                    <community-name>color-{tag-value}</community-name>
                   </community>
                 </then>
               </term>
@@ -234,8 +211,10 @@
                 <rd-type>{route-distinguisher}</rd-type>
               </route-distinguisher>
 
-              <vrf-import when="{count(../sr-te/odn/import-color)>0}">{vrf-definition}-import-add-color</vrf-import>
-              <vrf-export when="{count(../sr-te/odn/export-color)>0}">{vrf-definition}-export-add-color</vrf-export>
+              <?foreach {../sr-te/odn/route-policy/statements/statement[actions/bgp-actions/set-ext-community/tag-value != '']}?>
+                <vrf-import when="{../../direction='import'}">{../../route-policy-name}-import-add-color</vrf-import>
+                <vrf-export when="{../../direction='export'}">{../../route-policy-name}-export-add-color</vrf-export>
+              <?end?>
               <vrf-import>{vrf-definition}-import</vrf-import>
               <vrf-export>{vrf-definition}-export</vrf-export>
               <vrf-table-label/>
