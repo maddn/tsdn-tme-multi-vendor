@@ -4,7 +4,7 @@ class Junos:
     def conf_l2vpn(self, site, local):
         self.log.info(f"Configuring Flat L2VPN/SR on Junos for service {site.pe}")
 
-        if self.service.service_type == "evpn-multipoint":
+        if self.service.service_type == "evpn-vpws":
             l2vpn_vars = ncs.template.Variables()
             l2vpn_vars.add("LOCAL_NODE", "true" if local is True else "false")
             l2vpn_template = ncs.template.Template(site)
