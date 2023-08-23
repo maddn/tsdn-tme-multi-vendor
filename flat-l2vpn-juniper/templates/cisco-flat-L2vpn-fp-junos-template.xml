@@ -50,6 +50,18 @@
               </unit>
             </interface>
           </interfaces>
+          <protocols>
+            <bgp>
+              <group>
+                <name>ibgp</name>
+                <family>
+                  <evpn>
+                    <signaling/>
+                  </evpn>
+                </family>
+              </group>
+            </bgp>
+          </protocols>
           <routing-instances>
             <instance>
               <name>{string(../evi-id)}</name>
@@ -68,7 +80,7 @@
                       <?end?>
                     </vpws-service-id>
                   </interface>
-                  <control-word when="{control-word='yes'}"/>
+                  <control-word/>
                 </evpn>
               </protocols>
               <interface>
