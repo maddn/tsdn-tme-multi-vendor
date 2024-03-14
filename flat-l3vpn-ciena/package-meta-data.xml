@@ -1,0 +1,20 @@
+<ncs-package xmlns="http://tail-f.com/ns/ncs-packages">
+  <name>flat-l3vpn-ciena</name>
+  <package-version>0.1</package-version>
+  <description>Ciena Flat L3VPN Package for T-SDN</description>
+  <ncs-min-version>6.1</ncs-min-version>
+
+  <supported-ned-id xmlns:ciena-nc-1.0-nc-1.0="http://tail-f.com/ns/ned-id/ciena-nc-1.0-nc-1.0">ciena-nc-1.0-nc-1.0:ciena-nc-1.0-nc-1.0</supported-ned-id>
+
+  <python-package>
+    <vm-name>cisco-flat-L3vpn-fp-internal</vm-name>
+    <callpoint-model>threading</callpoint-model>
+  </python-package>
+
+  <component>
+    <name>main</name>
+    <application>
+      <python-class-name>flat_l3vpn_ciena.main.Main</python-class-name>
+    </application>
+  </component>
+</ncs-package>

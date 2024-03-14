@@ -195,6 +195,23 @@
             </interface>
           </interfaces>
 
+          <class-of-service>
+            <interfaces>
+              <interface>
+                <name>{$IF_TYPE}-{if-id}</name>
+                <scheduler-map>{qos/output-policy}</scheduler-map>
+                <unit>
+                  <name>{$IF_UNIT}</name>
+                  <classifiers>
+                    <dscp>
+                      <name>{qos/input-policy}</name>
+                    </dscp>
+                  </classifiers>
+                </unit>
+              </interface>
+            </interfaces>
+          </class-of-service>
+
           <routing-instances>
             <instance>
               <name>{vrf/vrf-definition}</name>

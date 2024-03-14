@@ -1,0 +1,8 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <cfp-configurations xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te">
+    <dynamic-device-mapping>
+      <ned-id>huawei-vrp_nc-gen-1.0:huawei-vrp_nc-gen-1.0</ned-id>
+      <python-impl-class-name>sr_te_huawei.Huawei</python-impl-class-name>
+    </dynamic-device-mapping>
+  </cfp-configurations>
+</config>

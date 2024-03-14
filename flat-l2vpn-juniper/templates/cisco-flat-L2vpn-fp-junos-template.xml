@@ -43,9 +43,10 @@
                 <flexible-vlan-tagging/>
                 <encapsulation>flexible-ethernet-services</encapsulation>
               <?end?>
-              <unit>
+              <unit when="{$IF_UNIT != '0'}">
                 <name>{$IF_UNIT}</name>
-                <encapsulation when="{$IF_UNIT != '0'}">vlan-ccc</encapsulation>
+                <encapsulation when="{$SERVICE_TYPE='evpn-vpws'}">vlan-ccc</encapsulation>
+                <encapsulation when="{$SERVICE_TYPE='evpn'}">vlan-bridge</encapsulation>
                 <vlan-id>{vlan-id}</vlan-id>
               </unit>
             </interface>
@@ -65,9 +66,9 @@
           <routing-instances>
             <instance>
               <name>{string(../evi-id)}</name>
-              <instance-type>evpn-vpws</instance-type>
+              <instance-type>{$SERVICE_TYPE}</instance-type>
               <protocols>
-                <evpn>
+                <evpn when="{$SERVICE_TYPE='evpn-vpws'}">
                   <interface>
                     <name>{$IF_NAME}</name>
                     <vpws-service-id>
@@ -82,6 +83,12 @@
                   </interface>
                   <control-word/>
                 </evpn>
+                <evpn when="{$SERVICE_TYPE='evpn'}">
+                  <no-control-word/>
+                  <label-allocation>per-instance</label-allocation>
+                  <encapsulation>mpls</encapsulation>
+                  <default-gateway>no-gateway-community</default-gateway>
+                </evpn>
               </protocols>
               <interface>
                 <name>{$IF_NAME}</name>
@@ -90,7 +97,8 @@
                 <rd-type>{deref(pe)/../config/junos:configuration/routing-options/router-id}:{../evi-id}</rd-type>
               </route-distinguisher>
               <vrf-target>
-                <community>target:{deref(pe)/../config/junos:configuration/routing-options/autonomous-system/as-number}:{../evi-id}</community>
+                <!--community>target:{deref(pe)/../config/junos:configuration/routing-options/autonomous-system/as-number}:{../evi-id}</community-->
+                <community>target:{../evi-id}:{../evi-id}</community>
               </vrf-target>
             </instance>
           </routing-instances>

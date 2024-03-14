@@ -1,0 +1,10 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <l3vpn-ntw xmlns="urn:ietf:params:xml:ns:yang:ietf-l3vpn-ntw">
+    <cfp-configurations xmlns="http://cisco.com/ns/nso/fp/examples/cisco-l3vpn-ntw">
+      <dynamic-device-mapping>
+        <ned-id>eri6673-nc-1.0:eri6673-nc-1.0</ned-id>
+        <python-impl-class-name>flat_l3vpn_ericsson.Ericsson</python-impl-class-name>
+      </dynamic-device-mapping>
+    </cfp-configurations>
+  </l3vpn-ntw>
+</config>

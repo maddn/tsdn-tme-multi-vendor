@@ -1,0 +1,10 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <l2vpn-ntw xmlns="urn:ietf:params:xml:ns:yang:ietf-l2vpn-ntw">
+    <cfp-configurations xmlns="http://cisco.com/ns/nso/fp/examples/cisco-l2vpn-ntw">
+      <dynamic-device-mapping>
+        <ned-id>huawei-vrp_nc-gen-1.0:huawei-vrp_nc-gen-1.0</ned-id>
+        <python-impl-class-name>flat_l3vpn_huawei.Huawei</python-impl-class-name>
+      </dynamic-device-mapping>
+    </cfp-configurations>
+  </l2vpn-ntw>
+</config>

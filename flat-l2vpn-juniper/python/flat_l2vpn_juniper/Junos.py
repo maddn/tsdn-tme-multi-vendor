@@ -4,11 +4,12 @@ class Junos:
     def conf_l2vpn(self, site, local):
         self.log.info(f"Configuring Flat L2VPN/SR on Junos for service {site.pe}")
 
-        if self.service.service_type == "evpn-vpws":
-            l2vpn_vars = ncs.template.Variables()
-            l2vpn_vars.add("LOCAL_NODE", "true" if local is True else "false")
-            l2vpn_template = ncs.template.Template(site)
-            l2vpn_template.apply("cisco-flat-L2vpn-fp-junos-template", l2vpn_vars)
+        l2vpn_vars = ncs.template.Variables()
+        l2vpn_template = ncs.template.Template(site)
+        l2vpn_vars.add("LOCAL_NODE", "true" if local is True else "false")
+        l2vpn_vars.add("SERVICE_TYPE", 'evpn' if self.service.service_type ==
+                'evpn-multipoint' else self.service.service_type)
+        l2vpn_template.apply("cisco-flat-L2vpn-fp-junos-template", l2vpn_vars)
 
     def conf_l2vpn_rp(self, rr_parent_route_policy):
         self.log.info("Route Policy is currently not supported on Junos, passing")

@@ -1,0 +1,114 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{access-pe}</name>
+
+      <config>
+
+        <contexts xmlns="urn:rdns:com:ericsson:oammodel:ericsson-contexts-router6000">
+          <context xmlns="urn:rdns:com:ericsson:oammodel:ericsson-context-router6000">
+            <context-name>{vrf/vrf-definition}</context-name>
+            <vpn-conf>
+              <vpn-val>{route-distinguisher}</vpn-val>
+            </vpn-conf>
+            <router>
+              <bgp xmlns="urn:rdns:com:ericsson:oammodel:ericsson-bgp-router6000">
+                <bgp>vpn</bgp>
+                <address-family foreach="{address-family}">
+                  <ipv4 when="{address-family='ipv4'}">
+                    <unicast foreach="{vpn-target}">
+                      <export when="{rt-type='export' or rt-type='both'}">
+                        <route-target>
+                          <rt-community>{rt-value}</rt-community>
+                        </route-target>
+                      </export>
+                      <import when="{rt-type='import' or rt-type='both'}">
+                        <route-target>
+                          <rt-community>{rt-value}</rt-community>
+                        </route-target>
+                      </import>
+                      <redistribute>
+                        <connected when="{../redistribute-connected}"/>
+                        <static/>
+                      </redistribute>
+                    </unicast>
+                  </ipv4>
+                  <ipv6 when="{address-family='ipv4'}">
+                    <unicast foreach="{vpn-target}">
+                      <export when="{rt-type='export' or rt-type='both'}">
+                        <route-target>
+                          <rt-community>{rt-value}</rt-community>
+                        </route-target>
+                      </export>
+                      <import when="{rt-type='import' or rt-type='both'}">
+                        <route-target>
+                          <rt-community>{rt-value}</rt-community>
+                        </route-target>
+                      </import>
+                      <redistribute>
+                        <connected when="{../redistribute-connected}"/>
+                        <static/>
+                      </redistribute>
+                    </unicast>
+                  </ipv6>
+                </address-family>
+              </bgp>
+            </router>
+            <logging xmlns="urn:rdns:com:ericsson:oammodel:ericsson-logger-router6000">
+              <console>false</console>
+            </logging>
+          </context>
+        </contexts>
+
+        <interfaces xmlns="urn:ietf:params:xml:ns:yang:ietf-interfaces">
+          <interface>
+            <name>to_ce@{string(vrf/vrf-definition)}</name>
+            <type xmlns:ianaift="urn:ietf:params:xml:ns:yang:iana-if-type">ianaift:ipForward</type>
+            <l3-interface xmlns="urn:rdns:com:ericsson:oammodel:ericsson-interfaces-ext-router6000">
+              <ipv6>
+                <address>
+                  <addr-primary>{pe-ipv6-addr}</addr-primary>
+                </address>
+              </ipv6>
+              <ip>
+                <address>
+                  <addr-primary-conf>
+                    <addr>{pe-ip-addr}</addr>
+                  </addr-primary-conf>
+                </address>
+              </ip>
+              <context>{vrf/vrf-definition}</context>
+            </l3-interface>
+          </interface>
+        </interfaces>
+
+        <interfaces xmlns="urn:ietf:params:xml:ns:yang:ietf-interfaces">
+          <interface>
+            <name>{if-id}</name>
+            <type xmlns:ianaift="urn:ietf:params:xml:ns:yang:iana-if-type">ianaift:ethernetCsmacd</type>
+            <enabled>true</enabled>
+            <ethernet xmlns="urn:rdns:com:ericsson:oammodel:ericsson-ethernet-ext-router6000">
+              <bind-interface>
+                <intf-name>to_ce@{vrf/vrf-definition}</intf-name>
+                <intf-ctx>{vrf/vrf-definition}</intf-ctx>
+              </bind-interface>
+              <port-type>10ge</port-type>
+              <lldp xmlns="urn:rdns:com:ericsson:oammodel:ericsson-interface-lldp-router6000">
+                <enable>true</enable>
+              </lldp>
+              <qos xmlns="urn:rdns:com:ericsson:oammodel:ericsson-interface-qos-ext-router6000">
+                <policy>
+                  <policing>
+                    <pol-name>{qos/input-policy}</pol-name>
+                  </policing>
+                  <queuing>{qos/output-policy}</queuing>
+                </policy>
+              </qos>
+            </ethernet>
+          </interface>
+        </interfaces>
+
+      </config>
+    </device>
+  </devices>
+</config>

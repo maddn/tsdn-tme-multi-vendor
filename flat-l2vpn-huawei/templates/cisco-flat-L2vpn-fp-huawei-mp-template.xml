@@ -1,0 +1,85 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{pe}</name>
+
+      <?set IF_NAME={if-type}{if-id}.{vlan-id}?>
+
+      <config>
+
+        <bd xmlns="urn:huawei:yang:huawei-bd">
+          <instances>
+            <instance>
+              <id>{string(../bridge-group)}</id>
+              <service-points>
+                <service-point>
+                  <interface-name>{$IF_NAME}</interface-name>
+                </service-point>
+              </service-points>
+              <evpn xmlns="urn:huawei:yang:huawei-evpn">
+                <name>{string(../evi-id)}</name>
+              </evpn>
+              <nd-bd-property xmlns="urn:huawei:yang:huawei-ipv6-nd">
+                <unicast-forward>false</unicast-forward>
+                <proxy-reply>false</proxy-reply>
+                <collect-host-flag>false</collect-host-flag>
+                <dynamic-limit>256</dynamic-limit>
+                <router-flag>true</router-flag>
+                <dynamic-expire-time>900</dynamic-expire-time>
+              </nd-bd-property>
+            </instance>
+          </instances>
+        </bd>
+        <evpn xmlns="urn:huawei:yang:huawei-evpn">
+          <instances>
+            <instance>
+              <name>{string(../evi-id)}</name>
+              <type>bd-evpn</type>
+              <bd-evpn>
+                <rd>{deref(pe)/../config/bgp:bgp/base-process/as}:{../evi-id}</rd>
+                <rts>
+                  <rt>
+                    <vrf-rt-type>export-extcommunity</vrf-rt-type>
+                    <vrf-rt-value>{deref(pe)/../config/bgp:bgp/base-process/as}:{../evi-id}</vrf-rt-value>
+                  </rt>
+                  <rt>
+                    <vrf-rt-type>import-extcommunity</vrf-rt-type>
+                    <vrf-rt-value>{deref(pe)/../config/bgp:bgp/base-process/as}:{../evi-id}</vrf-rt-value>
+                  </rt>
+                </rts>
+              </bd-evpn>
+              <mac-limit xmlns="urn:huawei:yang:huawei-macm">
+                <alarm-threshold>
+                  <lower>70</lower>
+                  <upper>80</upper>
+                </alarm-threshold>
+              </mac-limit>
+            </instance>
+          </instances>
+        </evpn>
+        <ifm xmlns="urn:huawei:yang:huawei-ifm">
+          <interfaces>
+            <interface>
+              <name>{$IF_NAME}</name>
+              <class>sub-interface</class>
+              <type>GigabitEthernet</type>
+              <link-protocol>ethernet</link-protocol>
+              <l2-mode-enable>true</l2-mode-enable>
+              <ethernet xmlns="urn:huawei:yang:huawei-ethernet">
+                <l2-sub-interface>
+                  <local-switch>disable</local-switch>
+                  <dot1q>
+                    <vlans>
+                      <vlan-list>{vlan-id}</vlan-list>
+                    </vlans>
+                  </dot1q>
+                </l2-sub-interface>
+              </ethernet>
+            </interface>
+          </interfaces>
+        </ifm>
+
+      </config>
+    </device>
+  </devices>
+</config>

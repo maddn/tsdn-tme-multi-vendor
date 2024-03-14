@@ -1,0 +1,73 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{pe}</name>
+
+      <?set IF_NAME={if-type}{if-id}.{vlan-id}?>
+
+      <config>
+        <evpl xmlns="urn:huawei:yang:huawei-evpl">
+          <instances>
+            <instance>
+              <id>{string(../evi-id)}</id>
+              <mode>none</mode>
+              <interfaces>
+                <interface>
+                  <name>{$IF_NAME}</name>
+                </interface>
+              </interfaces>
+              <evpn xmlns="urn:huawei:yang:huawei-evpn">
+                <name>{p2p-name}</name>
+                <?if {$LOCAL_NODE='true'}?>
+                  <local-service-id>{evi-source}</local-service-id>
+                  <remote-service-id>{evi-target}</remote-service-id>
+                <?else?>
+                  <local-service-id>{../local-site/evi-target}</local-service-id>
+                  <remote-service-id>{../local-site/evi-source}</remote-service-id>
+                <?end?>
+              </evpn>
+            </instance>
+          </instances>
+        </evpl>
+        <evpn xmlns="urn:huawei:yang:huawei-evpn">
+          <instances>
+            <instance>
+              <name>{p2p-name}</name>
+              <type>vpws-evpn</type>
+              <vpws-evpn>
+                <rd>{deref(pe)/../config/bgp:bgp/base-process/as}:{../evi-id}</rd>
+                <rts>
+                  <rt>
+                    <vrf-rt-type>export-extcommunity</vrf-rt-type>
+                    <vrf-rt-value>{deref(pe)/../config/bgp:bgp/base-process/as}:{../evi-id}</vrf-rt-value>
+                  </rt>
+                  <rt>
+                    <vrf-rt-type>import-extcommunity</vrf-rt-type>
+                    <vrf-rt-value>{deref(pe)/../config/bgp:bgp/base-process/as}:{../evi-id}</vrf-rt-value>
+                  </rt>
+                </rts>
+              </vpws-evpn>
+            </instance>
+          </instances>
+        </evpn>
+        <ifm xmlns="urn:huawei:yang:huawei-ifm">
+          <interfaces>
+            <interface>
+              <name>{$IF_NAME}</name>
+              <class>sub-interface</class>
+              <type>GigabitEthernet</type>
+              <link-protocol>ethernet</link-protocol>
+              <ethernet xmlns="urn:huawei:yang:huawei-ethernet">
+                <l3-sub-interface>
+                  <vlan-type-dot1q>
+                    <vlan-type-vid>{vlan-id}</vlan-type-vid>
+                  </vlan-type-dot1q>
+                </l3-sub-interface>
+              </ethernet>
+            </interface>
+          </interfaces>
+        </ifm>
+      </config>
+    </device>
+  </devices>
+</config>

@@ -1,0 +1,45 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{$HEAD_END}</name>
+      <config>
+        <network-instance xmlns="urn:huawei:yang:huawei-network-instance">
+          <instances>
+            <instance>
+              <name>_public_</name>
+              <segment-routing xmlns="urn:huawei:yang:huawei-segment-routing">
+                <srpolicy xmlns="urn:huawei:yang:huawei-srpolicy">
+                  <policys>
+                    <policy>
+                      <endpoint>{tail-end}</endpoint>
+                      <color>{color}</color>
+                      <name>{name}</name>
+                      <binding-sid>
+                        <dataplane>mpls</dataplane>
+                        <value>{binding-sid}</value>
+                      </binding-sid>
+                      <traffic-statistics-enable>enable</traffic-statistics-enable>
+                      <compute-types when="{path[1]/dynamic/pce}">
+                        <compute-type>
+                          <type>pcep</type>
+                        </compute-type>
+                      </compute-types>
+                      <candidate-paths>
+                        <candidate-path foreach="{path}">
+                          <protocol-origin>configuration</protocol-origin>
+                          <originator>0,{../source-address}</originator>
+                          <discriminator>{preference}</discriminator>
+                          <preference>{preference}</preference>
+                        </candidate-path>
+                      </candidate-paths>
+                    </policy>
+                  </policys>
+                </srpolicy>
+              </segment-routing>
+            </instance>
+          </instances>
+        </network-instance>
+      </config>
+    </device>
+  </devices>
+</config>

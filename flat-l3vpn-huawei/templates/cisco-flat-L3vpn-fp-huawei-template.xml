@@ -1,0 +1,151 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{access-pe}</name>
+
+      <?set IF_TYPE='{if-type}'?>
+      <?if {if-type='TwentyFiveGigE'} ?>
+        <?set IF_TYPE='25GE'?>
+      <?end?>
+      <?set IF_NAME={$IF_TYPE}{if-id}?>
+
+      <config>
+
+        <routing-policy xmlns="urn:huawei:yang:huawei-routing-policy">
+          <policy-definitions>
+            <policy-definition foreach="{sr-te/odn/route-policy/statements/statement/actions/bgp-actions/set-ext-community}">
+              <name>color{tag-value}</name>
+              <nodes>
+                <node>
+                  <sequence>1</sequence>
+                  <match-mode>permit</match-mode>
+                  <actions>
+                    <apply-ext-community-color>
+                      <value>0:{tag-value}</value>
+                    </apply-ext-community-color>
+                  </actions>
+                </node>
+              </nodes>
+            </policy-definition>
+          </policy-definitions>
+        </routing-policy>
+
+        <ifm xmlns="urn:huawei:yang:huawei-ifm">
+          <interfaces>
+            <interface>
+              <name>{$IF_NAME}.{vlan-id}</name>
+              <class>sub-interface</class>
+              <type>{$IF_TYPE}</type>
+              <parent-name>{$IF_NAME}</parent-name>
+              <number>{vlan-id}</number>
+              <mtu>1500</mtu>
+              <vrf-name>{vrf/vrf-definition}</vrf-name>
+              <ethernet xmlns="urn:huawei:yang:huawei-ethernet">
+                <l3-sub-interface>
+                  <vlan-type-dot1q>
+                    <vlan-type-vid>{vlan-id}</vlan-type-vid>
+                  </vlan-type-dot1q>
+                </l3-sub-interface>
+              </ethernet>
+              <ipv4 xmlns="urn:huawei:yang:huawei-ip">
+                <addresses>
+                  <address>
+                    <ip>{substring-before(pe-ip-addr, '/')}</ip>
+                    <mask>255.255.255.0</mask>
+                    <type>main</type>
+                  </address>
+                </addresses>
+              </ipv4>
+            </interface>
+
+            <interface>
+              <name>{$IF_NAME}</name>
+              <qos xmlns="urn:huawei:yang:huawei-qos">
+                <profile-applys>
+                  <profile-apply>
+                    <profile-name>{qos/output-policy}</profile-name>
+                    <direction>outbound</direction>
+                    <type>interface</type>
+                    <pe-vlan-id>0</pe-vlan-id>
+                    <ce-begin-vlan-id>0</ce-begin-vlan-id>
+                    <ce-end-vlan-id>0</ce-end-vlan-id>
+                    <identify-type>none</identify-type>
+                  </profile-apply>
+                  <profile-apply>
+                    <profile-name>{qos/input-policy}</profile-name>
+                    <direction>inbound</direction>
+                    <type>interface</type>
+                    <pe-vlan-id>0</pe-vlan-id>
+                    <ce-begin-vlan-id>0</ce-begin-vlan-id>
+                    <ce-end-vlan-id>0</ce-end-vlan-id>
+                    <identify-type>none</identify-type>
+                  </profile-apply>
+                </profile-applys>
+              </qos>
+            </interface>
+          </interfaces>
+        </ifm>
+
+        <network-instance xmlns="urn:huawei:yang:huawei-network-instance">
+          <instances>
+            <instance>
+              <name>{vrf/vrf-definition}</name>
+              <bgp xmlns="urn:huawei:yang:huawei-bgp">
+                <base-process>
+                  <afs foreach="{address-family}">
+                    <af when="{address-family='ipv4'}">
+                      <type>ipv4uni</type>
+                      <ipv4-unicast>
+                        <import-routes>
+                          <import-route>
+                            <protocol>direct</protocol>
+                            <process-id>0</process-id>
+                          </import-route>
+                        </import-routes>
+                      </ipv4-unicast>
+                    </af>
+                  </afs>
+                  <peers when="{../ce-pe-prot/e-bgp}">
+                    <?set-context-node {../ce-pe-prot/e-bgp?>
+                    <peer>
+                      <address>{neighbor-ipv4}</address>
+                      <remote-as>{remote-as-ipv4}</remote-as>
+                      <ebgp-max-hop>1</ebgp-max-hop>
+                      <local-ifnet-disable>false</local-ifnet-disable>
+                      <afs when="{count(sr-te/odn/route-policy/statements/statement[actions/bgp-actions/set-ext-community/tag-value != '']) > 0}">
+                        <af>
+                          <type>ipv4vpn</type>
+                          <ipv4-vpn>
+                            <import-policy foreach="{../../sr-te/odn/route-policy/statements/statement/actions/bgp-actions/set-ext-community}">color{tag-value}</import-policy>
+                          </ipv4-vpn>
+                        </af>
+                      </afs>
+                    </peer>
+                  </peers>
+                </base-process>
+              </bgp>
+
+              <afs xmlns="urn:huawei:yang:huawei-l3vpn" foreach="{address-family}">
+                <af when="{address-family='ipv4'}">
+                  <type>ipv4-unicast</type>
+                  <route-distinguisher>{../route-distinguisher}</route-distinguisher>
+                  <vpn-targets foreach="{vpn-target}">
+                    <vpn-target when="{rt-type='export' or rt-type='both'}">
+                      <value>{rt-value}</value>
+                      <type>export-extcommunity</type>
+                    </vpn-target>
+                    <vpn-target when="{rt-type='import' or rt-type='both'}">
+                      <value>{rt-value}</value>
+                      <type>import-extcommunity</type>
+                    </vpn-target>
+                  </vpn-targets>
+                </af>
+              </afs>
+            </instance>
+          </instances>
+        </network-instance>
+
+      </config>
+    </device>
+  </devices>
+</config>

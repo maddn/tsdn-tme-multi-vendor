@@ -1,0 +1,130 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{access-pe}</name>
+
+      <config>
+        <vrf xmlns="urn:ciena:params:xml:ns:yang:ciena:ciena-vrf">
+          <vrfName>{vrf/vrf-definition}</vrfName>
+          <sr-policy foreach="{sr-te/odn/route-policy/statements/statement/actions/bgp-actions/set-ext-community}">
+            <color>{tag-value}</color>
+            <fallback>disable</fallback>
+          </sr-policy>
+        </vrf>
+
+        <interfaces xmlns="http://openconfig.net/yang/interfaces">
+          <interface>
+            <name>{if-id}_{vlan-id}</name>
+            <config>
+              <name>{if-id}_{vlan-id}</name>
+              <mtu>1500</mtu>
+              <type xmlns="http://ciena.com/ns/yang/ciena-openconfig-interfaces">ip</type>
+              <vrfName xmlns="http://ciena.com/ns/yang/ciena-openconfig-interfaces">{vrf/vrf-definition}</vrfName>
+              <underlay-binding xmlns="http://ciena.com/ns/yang/ciena-underlay-binding">
+                <config>
+                  <fd>fd_{if-id}_{vlan-id}</fd>
+                </config>
+              </underlay-binding>
+            </config>
+            <ipv4 xmlns="http://ciena.com/ns/yang/ciena-openconfig-if-ip">
+              <addresses>
+                <address>
+                  <ip>{substring-before(pe-ip-addr, '/')}</ip>
+                  <config>
+                    <ip>{substring-before(pe-ip-addr, '/')}</ip>
+                    <prefix-length>{substring-after(pe-ip-addr, '/')}</prefix-length>
+                  </config>
+                </address>
+              </addresses>
+            </ipv4>
+          </interface>
+        </interfaces>
+
+        <fds xmlns="urn:ciena:params:xml:ns:yang:ciena-pn:ciena-mef-fd">
+          <fd>
+            <name>fd_{if-id}_{vlan-id}</name>
+            <description>fd_{if-id}_{vlan-id}</description>
+            <mode>vpls</mode>
+            <initiate-cos-to-frame-map>default-c2f</initiate-cos-to-frame-map>
+            <initiate-frame-to-cos-map>default-f2c</initiate-frame-to-cos-map>
+          </fd>
+        </fds>
+
+        <fps xmlns="urn:ciena:params:xml:ns:yang:ciena-pn:ciena-mef-fp">
+          <fp>
+            <name>fp_{if-id}_{vlan-id}</name>
+            <fd-name>fd_{if-id}_{vlan-id}</fd-name>
+            <logical-port>{if-id}</logical-port>
+            <mtu-size>1500</mtu-size>
+            <classifier-list>{vlan-id}</classifier-list>
+            <classifier-list-precedence>7</classifier-list-precedence>
+            <stats-collection>on</stats-collection>
+            <frame-to-cos-map>{qos/input-policy}</frame-to-cos-map>
+          </fp>
+        </fps>
+
+        <interface-qos-binding xmlns="urn:ciena:params:xml:ns:yang:ciena-pn::ciena-mef-egress-qos-binding" when="{qos/output-policy}">
+          <interface-qos-binding>
+            <name>{if-id}</name>
+            <queue-group-instance>{qos/output-policy}</queue-group-instance>
+            <logical-port>{if-id}</logical-port>
+          </interface-qos-binding>
+        </interface-qos-binding>
+
+        <egress-qos xmlns="urn:ciena:params:xml:ns:yang:ciena-pn::ciena-mef-egress-qos">
+          <scheduler>
+            <name>{string(qos/output-policy)}</name>
+            <scheduler-profile>10Gb-8qSPh</scheduler-profile>
+            <instance-id>{if-id}</instance-id>
+            <parent-port>{if-id}</parent-port>
+          </scheduler>
+          <queue-group>
+            <name>{string(qos/output-policy)}</name>
+            <queue-group-profile>10Gb-8qDefault</queue-group-profile>
+            <instance-id>{if-id}</instance-id>
+            <parent-scheduler>{string(qos/output-policy)}</parent-scheduler>
+            <stats-collection>on</stats-collection>
+          </queue-group>
+        </egress-qos>
+
+        <classifiers xmlns="urn:ciena:params:xml:ns:yang:ciena-pn::ciena-mef-classifier">
+          <classifier>
+            <name>{vlan-id}</name>
+            <filter-entry>
+              <filter-parameter>vtag-stack</filter-parameter>
+              <vtags>
+                <tag>1</tag>
+                <vlan-id>{vlan-id}</vlan-id>
+              </vtags>
+            </filter-entry>
+          </classifier>
+        </classifiers>
+
+        <bgp xmlns="http://ciena.com/ns/yang/ciena-bgp">
+          <instance>
+            <as>{$AS_NO}</as>
+            <vrf>
+              <name>{vrf/vrf-definition}</name>
+              <route-distinguisher>0:{route-distinguisher}</route-distinguisher>
+
+              <?foreach {address-family}?>
+                <route-target foreach="{vpn-target}">
+                  <id>0:{rt-value}</id>
+                  <direction>{rt-type}</direction>
+                </route-target>
+                <vrf-address-family>
+                  <afi>{address-family}</afi>
+                  <safi>unicast</safi>
+                  <redistribute when="{redistribute-connected}">
+                    <protocol>connected</protocol>
+                  </redistribute>
+                </vrf-address-family>
+              <?end?>
+            </vrf>
+          </instance>
+        </bgp>
+
+      </config>
+    </device>
+  </devices>
+</config>

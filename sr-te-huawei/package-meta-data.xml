@@ -1,0 +1,20 @@
+<ncs-package xmlns="http://tail-f.com/ns/ncs-packages">
+  <name>sr-te-huawei</name>
+  <package-version>0.1</package-version>
+  <description>Huawei SR TE Package for T-SDN</description>
+  <ncs-min-version>6.0</ncs-min-version>
+
+  <supported-ned-id xmlns:huawei-vrp_nc-gen-1.0="http://tail-f.com/ns/ned-id/huawei-vrp_nc-gen-1.0">huawei-vrp_nc-gen-1.0:huawei-vrp_nc-gen-1.0</supported-ned-id>
+
+  <python-package>
+    <vm-name>cisco-sr-te-cfp-internal</vm-name>
+    <callpoint-model>threading</callpoint-model>
+  </python-package>
+
+  <component>
+    <name>main</name>
+    <application>
+      <python-class-name>sr_te_huawei.main.Main</python-class-name>
+    </application>
+  </component>
+</ncs-package>
