@@ -68,6 +68,20 @@ class Junos():
     def get_interface_shutdown_template(self):
         return None
 
+    def validate_vlan_id_exists(self, root, device, vlan_id,
+            service_interface_name, service_interface_id, vrf_name):
+        interface_name = '{}-{}.{}'.format(
+            Junos.interface_mapping[service_interface_name], service_interface_id, vlan_id)
+
+        routing_instances = (root.devices.device[device].config.configuration
+                             .routing_instances.instance)
+
+        for instance in routing_instances:
+            if instance.interface.name == interface_name and instance.name != vrf_name:
+                self.log.debug(f"detected vlan overlap for {interface_name} in VRF {instance.name}")
+                return True
+        return False
+
     def l3vpn_self_test(self, root, service, vrf_name, device, src, dst):
         self.log.info('Running L3vpn self test on Junos device {}'.format(device))
         return ("success", "Not Implemented")
