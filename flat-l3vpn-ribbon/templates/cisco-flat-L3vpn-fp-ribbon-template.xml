@@ -1,0 +1,71 @@
+<config-template xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{access-pe}</name>
+      <config>
+        <routing-policy xmlns="urn:eci:params:xml:ns:yang:eci-routing-policy">
+          <policy-definitions>
+            <policy-definition>
+              <policy-name>{vrf-vrf-definition}-tunnel</policy-name>
+              <statements>
+                <statement>
+                  <statement-name>1</statement-name>
+                  <actions>
+                    <route-disposition>ACCEPT-ROUTE</route-disposition>
+                    <tunnel-actions xmlns="urn:eci:params:xml:ns:yang:eci-tunnel-policy">
+                      <tunnel-type>SR-TE</tunnel-type>
+                      <tunnel-name>PCE-sr-policy-ribbon-cisco</tunnel-name>
+                    </tunnel-actions>
+                  </actions>
+                </statement>
+              </statements>
+            </policy-definition>
+          </policy-definitions>
+        </routing-policy>
+
+        <network-instances xmlns="urn:ietf:params:xml:ns:yang:ietf-network-instance">
+          <network-instance>
+            <name>{vrf/vrf-definition}</name>
+            <tunnel-params xmlns="urn:eci:params:xml:ns:yang:eci-bgp-l3vpn">
+              <config>
+                <tunnel-policy>{vrf/vrf-definition}-tunnel</tunnel-policy>
+              </config>
+            </tunnel-params>
+            <route-distinguisher xmlns="urn:eci:params:xml:ns:yang:eci-l3vpn-aug">
+              <config>
+                <rd>1:{route-distinguisher}</rd>
+              </config>
+            </route-distinguisher>
+            <route-targets xmlns="urn:eci:params:xml:ns:yang:eci-l3vpn-aug">
+              <config>
+                  <both>
+                    <?foreach {address-family[address-family='ipv4']/vpn-target}?>
+                      <rts>
+                        <rt>0:{rt-value}</rt>
+                      </rts>
+                    <?end?>
+                  </both>
+              </config>
+            </route-targets>
+          </network-instance>
+        </network-instances>
+
+        <interfaces xmlns="urn:ietf:params:xml:ns:yang:ietf-interfaces">
+          <interface>
+            <name>et-bs/{if-id}.{vlan-id}</name>
+            <type xmlns:eci-if-aug="urn:eci:params:xml:ns:yang:eci-interfaces-aug">eci-if-aug:pif-lif</type>
+            <ipv4 xmlns="urn:ietf:params:xml:ns:yang:ietf-ip">
+              <address>
+                <ip>{substring-before(pe-ip-addr, '/')}</ip>
+                <netmask>255.255.255.0</netmask>
+              </address>
+              <bind-ni-name xmlns="urn:ietf:params:xml:ns:yang:ietf-network-instance">{vrf/vrf-definition}</bind-ni-name>
+            </ipv4>
+            <bind-ni-name xmlns="urn:ietf:params:xml:ns:yang:ietf-network-instance">{vrf/vrf-definition}</bind-ni-name>
+          </interface>
+        </interfaces>
+
+      </config>
+    </device>
+  </devices>
+</config-template>

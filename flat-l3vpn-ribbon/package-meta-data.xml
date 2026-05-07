@@ -1,0 +1,20 @@
+<ncs-package xmlns="http://tail-f.com/ns/ncs-packages">
+  <name>flat-l3vpn-ribbon</name>
+  <package-version>0.1</package-version>
+  <description>Ribbon Flat L3VPN Package for T-SDN</description>
+  <ncs-min-version>5.4.1</ncs-min-version>
+
+  <supported-ned-id xmlns:ribbon-nc-1.0="http://tail-f.com/ns/ned-id/ribbon-nc-1.0">ribbon-nc-1.0:ribbon-nc-1.0</supported-ned-id>
+
+  <python-package>
+    <vm-name>cisco-flat-L3vpn-fp-internal</vm-name>
+    <callpoint-model>threading</callpoint-model>
+  </python-package>
+
+  <component>
+    <name>main</name>
+    <application>
+      <python-class-name>flat_l3vpn_ribbon.main.Main</python-class-name>
+    </application>
+  </component>
+</ncs-package>
