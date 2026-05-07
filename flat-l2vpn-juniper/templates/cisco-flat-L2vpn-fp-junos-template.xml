@@ -47,6 +47,7 @@
                 <name>{$IF_UNIT}</name>
                 <encapsulation when="{$SERVICE_TYPE='evpn-vpws'}">vlan-ccc</encapsulation>
                 <encapsulation when="{$SERVICE_TYPE='evpn'}">vlan-bridge</encapsulation>
+                <encapsulation when="{$SERVICE_TYPE='evpn-multipoint'}">vlan-bridge</encapsulation>
                 <vlan-id>{vlan-id}</vlan-id>
               </unit>
             </interface>
@@ -66,7 +67,8 @@
           <routing-instances>
             <instance>
               <name>{string(../evi-id)}</name>
-              <instance-type>{$SERVICE_TYPE}</instance-type>
+              <instance-type when="{$SERVICE_TYPE='evpn-multipoint'}">mac-vrf</instance-type>
+              <instance-type when="{$SERVICE_TYPE!='evpn-multipoint'}">{$SERVICE_TYPE}</instance-type>
               <protocols>
                 <evpn when="{$SERVICE_TYPE='evpn-vpws'}">
                   <interface>
@@ -89,6 +91,17 @@
                   <encapsulation>mpls</encapsulation>
                   <default-gateway>no-gateway-community</default-gateway>
                 </evpn>
+                <evpn when="{$SERVICE_TYPE='evpn-multipoint'}">
+                  <encapsulation>srv6</encapsulation>
+                  <source-packet-routing>
+                    <srv6>
+                      <locator>
+                        <name>SL_FA128</name>
+                        <micro-dt2-sid/>
+                      </locator>
+                    </srv6>
+                  </source-packet-routing>
+                </evpn>
               </protocols>
               <interface>
                 <name>{$IF_NAME}</name>
@@ -100,6 +113,15 @@
                 <!--community>target:{deref(pe)/../config/junos:configuration/routing-options/autonomous-system/as-number}:{../evi-id}</community-->
                 <community>target:{../evi-id}:{../evi-id}</community>
               </vrf-target>
+              <vlans when="{$SERVICE_TYPE='evpn-multipoint'}">
+                <vlan>
+                  <name>BD-{vlan-id}</name>
+                 <vlan-id>{vlan-id}</vlan-id>
+                  <interface>
+                    <name>{$IF_NAME}</name>
+                  </interface>
+                </vlan>
+              </vlans>
             </instance>
           </routing-instances>
         </configuration>
