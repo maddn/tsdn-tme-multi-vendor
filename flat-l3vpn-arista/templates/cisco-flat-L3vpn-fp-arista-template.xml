@@ -20,6 +20,12 @@
           </routing>
         </ip>
 
+        <ipv6 xmlns="http://tail-f.com/ned/arista-dcs">
+          <unicast-routing>
+            <vrf>{vrf/vrf-definition}</vrf>
+          </unicast-routing>
+        </ipv6>
+
         <?set IF_NAME='{if-id}'?>
         <?if {vlan-id}?>
           <?set IF_NAME='{if-id}.{vlan-id}'?>

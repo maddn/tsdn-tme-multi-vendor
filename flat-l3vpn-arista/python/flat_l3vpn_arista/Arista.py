@@ -11,6 +11,12 @@ class Arista():
         self.log.info('Configuring Flat L3VPN/SR on Arista device {}'.format(endpoint.access_pe))
         Arista.template_flat_l3vpn(endpoint)
 
+    def get_bgp_as_from_device(self, root, device):
+        self.log.info('Gettign AS number on Arista device {}'.format(device))
+        for bgp in root.devices.device[device].config.router.bgp:
+            self.log.info(f'Found AS number {bgp.id}')
+            return bgp.id
+        return None
 
     def check_if_interface_exists(self, root, endpoint,
                                 service_interface_name, service_interface_id):
