@@ -1,0 +1,18 @@
+<ncs-package xmlns="http://tail-f.com/ns/ncs-packages">
+  <name>flat-l3vpn-nokia</name>
+  <package-version>0.1</package-version>
+  <description>Nokia Flat L3VPN Package for T-SDN</description>
+  <ncs-min-version>6.0</ncs-min-version>
+
+  <python-package>
+    <vm-name>cisco-flat-L3vpn-fp-internal</vm-name>
+    <callpoint-model>threading</callpoint-model>
+  </python-package>
+
+  <component>
+    <name>main</name>
+    <application>
+      <python-class-name>flat_l3vpn_nokia.main.Main</python-class-name>
+    </application>
+  </component>
+</ncs-package>

@@ -1,0 +1,178 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{access-pe}</name>
+      <config>
+        <configure xmlns="urn:nokia.com:sros:ns:yang:sr:conf">
+
+          <policy-options>
+            <?foreach {vrf/address-family[address-family='ipv4']/vpn-target}?>
+
+              <?if {rt-type='import' or rt-type='both'}?>
+                <community>
+                  <name>{string(../../vrf-definition)}-community-import</name>
+                  <member>
+                    <member>target:{rt-value}</member>
+                  </member>
+                </community>
+
+                <policy-statement>
+                  <name>{../../vrf-definition}-import</name>
+                  <entry>
+                    <entry-id>999</entry-id>
+                    <from>
+                      <community>
+                        <name>{vrf-definition}-community-import</name>
+                      </community>
+                      <protocol>
+                        <name>bgp-vpn</name>
+                      </protocol>
+                    </from>
+                    <action>
+                      <action-type>accept</action-type>
+                    </action>
+                  </entry>
+                  <default-action>
+                    <action-type>reject</action-type>
+                  </default-action>
+                </policy-statement>
+              <?end?>
+
+              <?if {rt-type='export' or rt-type='both'}?>
+                <community>
+                  <name>{string(../../vrf-definition)}-community-export</name>
+                  <member>
+                    <member>target:{rt-value}</member>
+                  </member>
+                </community>
+
+                <policy-statement>
+                  <name>{../../vrf-definition}-export</name>
+                  <entry>
+                    <entry-id>999</entry-id>
+                    <from>
+                      <protocol>
+                        <name>bgp-label</name>
+                      </protocol>
+                    </from>
+                    <to>
+                      <protocol>
+                        <name>bgp-vpn</name>
+                      </protocol>
+                    </to>
+                    <action>
+                      <action-type>next-entry</action-type>
+                      <community>
+                        <add>{vrf-definition}-community-export</add>
+                      </community>
+                    </action>
+                  </entry>
+                </policy-statement>
+              <?end?>
+
+            <?end?>
+          </policy-options>
+
+          <?set IF_TYPE='port'?>
+          <?if {if-type='Bundle-Ether'}?>
+            <?set IF_TYPE='lag'?>
+          <?end?>
+
+          <?set IF_NAME='{$IF_TYPE}-{if-id}'?>
+          <?if {vlan-id} ?>
+            <?set IF_NAME='{$IF_NAME}:{vlan-id}.{vlan-id}'?>
+          <?end?>
+
+          <service>
+            <vprn>
+              <service-name>{vrf/vrf-definition}</service-name>
+              <service-id>{vrf-definition}</service-id>
+              <customer>1</customer>
+              <autonomous-system>{../as-no}</autonomous-system>
+
+              <bgp-ipvpn>
+                <mpls>
+                  <route-distinguisher>{route-distinguisher}</route-distinguisher>
+                  <vrf-import>
+                    <policy>{vrf-definition}-import</policy>
+                  </vrf-import>
+                  <vrf-export>
+                    <policy>{vrf-definition}-export</policy>
+                  </vrf-export>
+                  <auto-bind-tunnel>
+                    <resolution>filter</resolution>
+                    <resolution-filter>
+                      <ldp>true</ldp>
+                      <sr-isis>true</sr-isis>
+                    </resolution-filter>
+                  </auto-bind-tunnel>
+                </mpls>
+              </bgp-ipvpn>
+
+              <bgp when="{../ce-pe-prot/e-bgp}">
+                <?set-context-node {../ce-pe-prot/e-bgp?>
+                <keepalive>15</keepalive>
+                <loop-detect>discard-route</loop-detect>
+                <hold-time>
+                  <seconds>90</seconds>
+                  <minimum-hold-time>45</minimum-hold-time>
+                </hold-time>
+                <group>
+                  <group-name>{../../vrf/vrf-definition}-bgp</group-name>
+                  <min-route-advertisement>5</min-route-advertisement>
+                  <type>external</type>
+                </group>
+                <neighbor>
+                  <ip-address>{neighbor-ipv4}</ip-address>
+                  <group>{../../vrf/vrf-definition}-bgp</group>
+                  <local-preference>120</local-preference>
+                  <med-out>80</med-out>
+                  <as-override>true</as-override>
+                  <peer-as>{remote-as-ipv4}</peer-as>
+                  <family>
+                    <ipv4>true</ipv4>
+                  </family>
+                </neighbor>
+              </bgp>
+
+              <interface>
+                <interface-name>{$IF_NAME}</interface-name>
+                <ip-mtu>1500</ip-mtu>
+                <cflowd-parameters>
+                  <sampling>
+                    <sampling-type>unicast</sampling-type>
+                    <type>interface</type>
+                  </sampling>
+                </cflowd-parameters>
+                <ipv4>
+                  <primary>
+                    <address>{substring-before(../pe-ip-addr, '/')}</address>
+                    <prefix-length>{substring-after(../pe-ip-addr, '/')}</prefix-length>
+                  </primary>
+                </ipv4>
+                <sap>
+                  <sap-id>{$IF_NAME}</sap-id>
+                  <ingress>
+                    <qos>
+                      <sap-ingress>
+                        <policy-name>{../qos/input-policy}</policy-name>
+                      </sap-ingress>
+                    </qos>
+                  </ingress>
+                  <egress>
+                    <qos>
+                      <sap-egress>
+                        <policy-name>{../qos/output-policy}</policy-name>
+                      </sap-egress>
+                    </qos>
+                  </egress>
+                </sap>
+              </interface>
+
+            </vprn>
+          </service>
+        </configure>
+      </config>
+    </device>
+  </devices>
+</config>
