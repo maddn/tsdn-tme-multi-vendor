@@ -282,6 +282,15 @@
                       <local-interface>{$IF_TYPE}-{if-id}.{$IF_UNIT}</local-interface>
                     <?end?>
                   </group>
+
+                  <source-packet-routing when="{../../vrf/address-family[address-family='ipv6']/srv6/locator-name}">
+                    <srv6>
+                      <locator>
+                        <name>{../../vrf/address-family[address-family='ipv6']/srv6/locator-name}</name>
+                        <micro-dt4-sid/>
+                      </locator>
+                    </srv6>
+                  </source-packet-routing>
                 </bgp>
               </protocols>
             </instance>

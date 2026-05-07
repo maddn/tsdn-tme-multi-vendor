@@ -82,6 +82,9 @@ class Junos():
                 return True
         return False
 
+    def validate_srv6_te(self, root, service, device):
+        pass
+
     def l3vpn_self_test(self, root, service, vrf_name, device, src, dst):
         self.log.info('Running L3vpn self test on Junos device {}'.format(device))
         return ("success", "Not Implemented")
