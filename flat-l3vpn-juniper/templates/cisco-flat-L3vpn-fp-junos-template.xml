@@ -195,12 +195,12 @@
             </interface>
           </interfaces>
 
-          <class-of-service>
+          <class-of-service when="{qos/output-policy or qos/input-policy}">
             <interfaces>
               <interface>
                 <name>{$IF_TYPE}-{if-id}</name>
                 <scheduler-map>{qos/output-policy}</scheduler-map>
-                <unit>
+                <unit when="{qos/input-policy}">
                   <name>{$IF_UNIT}</name>
                   <classifiers>
                     <dscp>
@@ -287,7 +287,6 @@
                     <srv6>
                       <locator>
                         <name>{../../vrf/address-family[address-family='ipv6']/srv6/locator-name}</name>
-                        <micro-dt4-sid/>
                       </locator>
                     </srv6>
                   </source-packet-routing>
